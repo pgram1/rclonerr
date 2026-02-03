@@ -1,0 +1,45 @@
+#!/bin/bash
+
+if ! command -v fzf &> /dev/null;
+then
+    echo "Error: fzf is not installed. Please install it to use this script."
+    exit 1
+fi
+
+if [ -z "$1" ];
+then
+    echo "Usage: ./rclonerr remote_name"
+    exit 1
+fi
+
+remote=$1
+
+mode=$(echo -e "Download\nUpload" | fzf --height 15% --reverse --header "─── SELECT OPERATION ───" --pointer "->")
+
+[ -z "$mode" ] && exit 0
+
+if [ "$mode" == "Download" ];
+then 
+    choice=$(rclone lsf "$remote:" --fast-list -R --checkers 64 | fzf --height 80% --reverse --header "Select REMOTE file/folder" --pointer "->")
+    
+    [ -z "$choice" ] && exit 0
+    final_string="$remote:$choice"
+    
+    echo -e "\nPATH: $final_string\n"
+    rclone copy "$final_string" . --progress --multi-thread-streams 30 --multi-thread-cutoff 0
+
+elif [ "$mode" == "Upload" ];
+then 
+    local_choice=$(rclone lsf . | fzf --height 40% --reverse --header "Select LOCAL item to upload" --pointer "->")
+    
+    [ -z "$local_choice" ] && exit 0
+    
+    remote_dir=$(echo -e ".(ROOT)\n$(rclone lsf "$remote:" --fast-list -R --dirs-only --checkers 64)" | fzf --height 40% --reverse --header "Select DESTINATION folder on $remote" --pointer "->")
+    
+    [ -z "$remote_dir" ] && exit 0
+    
+    [[ "$remote_dir" == ".(ROOT)" ]] && remote_dir=""
+
+    echo -e "\nUPLOADING: $local_choice TO $remote:$remote_dir\n"
+    rclone copy "$local_choice" "$remote:$remote_dir" --progress --multi-thread-streams 30 --multi-thread-cutoff 0
+fi
