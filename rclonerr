@@ -20,7 +20,7 @@ mode=$(echo -e "Download\nUpload" | fzf --height 15% --reverse --header "──�
 
 if [ "$mode" == "Download" ];
 then 
-    choice=$(rclone lsf "$remote:" --fast-list -R --checkers 64 | fzf --height 80% --reverse --header "Select REMOTE file/folder" --pointer "->")
+    choice=$(rclone lsf "$remote:" --fast-list -R --checkers 30 | fzf --height 80% --reverse --header "Select REMOTE file/folder" --pointer "->")
     
     [ -z "$choice" ] && exit 0
     final_string="$remote:$choice"
@@ -34,7 +34,7 @@ then
     
     [ -z "$local_choice" ] && exit 0
     
-    remote_dir=$(echo -e ".(ROOT)\n$(rclone lsf "$remote:" --fast-list -R --dirs-only --checkers 64)" | fzf --height 40% --reverse --header "Select DESTINATION folder on $remote" --pointer "->")
+    remote_dir=$(echo -e ".(ROOT)\n$(rclone lsf "$remote:" --fast-list -R --dirs-only --checkers 30)" | fzf --height 40% --reverse --header "Select DESTINATION folder on $remote" --pointer "->")
     
     [ -z "$remote_dir" ] && exit 0
     
